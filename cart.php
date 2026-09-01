@@ -100,8 +100,16 @@ if (!empty($_SESSION['cart'])) {
 
 // Discount & Delivery Calculation
 $delivery_charge = ($subtotal >= 500 || $subtotal == 0) ? 0.00 : 50.00;
-$discount = ($subtotal > 1000) ? round($subtotal * 0.10, 2) : 0.00; // 10% bonus discount on cart > 1000
-$grand_total = $subtotal - $discount + $delivery_charge;
+$applied_coupon = $_SESSION['applied_coupon'] ?? null;
+$coupon_discount = 0.00;
+if ($applied_coupon === 'GLOW15' && $subtotal >= 500) {
+    $coupon_discount = round($subtotal * 0.15, 2);
+} elseif ($applied_coupon === 'GLOW20' && $subtotal >= 1000) {
+    $coupon_discount = round($subtotal * 0.20, 2);
+}
+$tier_discount = ($subtotal > 1000 && empty($applied_coupon)) ? round($subtotal * 0.10, 2) : 0.00;
+$discount = $coupon_discount > 0 ? $coupon_discount : $tier_discount;
+$grand_total = max(0.00, $subtotal - $discount + $delivery_charge);
 
 $page_title = 'Shopping Cart (' . get_cart_count() . ' items) | GlowCart Cosmetics';
 require_once __DIR__ . '/includes/header.php';
@@ -133,7 +141,7 @@ require_once __DIR__ . '/includes/navbar.php';
                         </thead>
                         <tbody>
                             <?php foreach ($cart_items as $item): ?>
-                                <tr>
+                                <tr id="cartRow-<?= $item['id'] ?>">
                                     <td>
                                         <div class="cart-item-info">
                                             <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="cart-item-img">
@@ -144,8 +152,11 @@ require_once __DIR__ . '/includes/navbar.php';
                                                 <strong style="font-size: 14px;">
                                                     <a href="product_details.php?id=<?= $item['id'] ?>"><?= htmlspecialchars($item['name']) ?></a>
                                                 </strong>
-                                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                                                    <?= $item['stock'] ?> available
+                                                <div style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 3px;">
+                                                    <?= format_price($item['price']) ?>
+                                                </div>
+                                                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 1px;">
+                                                    <?= $item['stock'] ?> in stock
                                                 </div>
                                             </div>
                                         </div>
@@ -156,23 +167,30 @@ require_once __DIR__ . '/includes/navbar.php';
                                     </td>
 
                                     <td>
-                                        <div class="quantity-control">
-                                            <button type="button" class="qty-btn qty-minus">-</button>
-                                            <input type="number" name="quantities[<?= $item['id'] ?>]" class="qty-input" value="<?= $item['quantity'] ?>" min="1" max="<?= $item['stock'] ?>" readonly>
-                                            <button type="button" class="qty-btn qty-plus">+</button>
+                                        <div class="cart-mobile-row">
+                                            <div class="quantity-control">
+                                                <button type="button" class="qty-btn qty-minus">-</button>
+                                                <input type="number" name="quantities[<?= $item['id'] ?>]" class="qty-input" value="<?= $item['quantity'] ?>" min="1" max="<?= $item['stock'] ?>" readonly>
+                                                <button type="button" class="qty-btn qty-plus">+</button>
+                                            </div>
+                                            <strong style="color: var(--primary); font-size: 16px; display: none;" class="mobile-line-total">
+                                                <?= format_price($item['line_subtotal']) ?>
+                                            </strong>
                                         </div>
                                     </td>
 
                                     <td>
-                                        <strong style="color: var(--primary); font-size: 15px;">
+                                        <strong style="color: var(--primary); font-size: 15px;" id="lineSubtotal-<?= $item['id'] ?>">
                                             <?= format_price($item['line_subtotal']) ?>
                                         </strong>
                                     </td>
 
                                     <td>
-                                        <button type="button" class="cart-remove-btn" onclick="removeItemFromCart(<?= $item['id'] ?>)" title="Remove Item">
-                                            🗑️
-                                        </button>
+                                        <div class="cart-mobile-actions">
+                                            <button type="button" class="cart-remove-btn" onclick="removeItemFromCart(<?= $item['id'] ?>)" title="Remove Item" aria-label="Remove item">
+                                                🗑️
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -195,19 +213,17 @@ require_once __DIR__ . '/includes/navbar.php';
 
                     <div class="summary-row">
                         <span>Items Subtotal</span>
-                        <strong><?= format_price($subtotal) ?></strong>
+                        <strong id="cartSubtotalDisplay"><?= format_price($subtotal) ?></strong>
                     </div>
 
-                    <?php if ($discount > 0): ?>
-                        <div class="summary-row" style="color: var(--success);">
-                            <span>Special Promo Discount (10%)</span>
-                            <strong>-<?= format_price($discount) ?></strong>
-                        </div>
-                    <?php endif; ?>
+                    <div class="summary-row" id="cartDiscountRow" style="color: var(--success); display: <?= ($discount > 0) ? 'flex' : 'none' ?>;">
+                        <span>Discount <?= !empty($applied_coupon) ? '(' . htmlspecialchars($applied_coupon) . ')' : ($subtotal > 1000 ? '(Tier 10%)' : '') ?></span>
+                        <strong id="cartDiscountDisplay">-<?= format_price($discount) ?></strong>
+                    </div>
 
                     <div class="summary-row">
                         <span>Delivery Fee</span>
-                        <strong>
+                        <strong id="cartDeliveryDisplay">
                             <?php if ($delivery_charge === 0.00): ?>
                                 <span style="color: var(--success); font-weight: 600;">FREE</span>
                             <?php else: ?>
@@ -218,7 +234,26 @@ require_once __DIR__ . '/includes/navbar.php';
 
                     <div class="summary-row total">
                         <span>Grand Total</span>
-                        <span><?= format_price($grand_total) ?></span>
+                        <span id="cartGrandTotalDisplay"><?= format_price($grand_total) ?></span>
+                    </div>
+
+                    <!-- Interactive Promo Coupon Section -->
+                    <div class="cart-coupon-box">
+                        <label for="couponCodeInput" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-main); display: block;">
+                            🏷️ Have a Promo Coupon?
+                        </label>
+                        <div class="cart-coupon-input-wrap">
+                            <input type="text" id="couponCodeInput" class="cart-coupon-input" placeholder="e.g. GLOW15 or GLOW20" value="<?= htmlspecialchars($applied_coupon ?? '') ?>" autocomplete="off">
+                            <button type="button" id="applyCouponBtn" class="btn btn-primary btn-sm">Apply</button>
+                        </div>
+                        <div id="appliedCouponBadgeWrap">
+                            <?php if (!empty($applied_coupon)): ?>
+                                <div class="cart-coupon-badge-applied">
+                                    <span>🎉 Coupon <strong><?= htmlspecialchars($applied_coupon) ?></strong> Applied!</span>
+                                    <button type="button" class="cart-coupon-remove-btn" onclick="removeCouponCode()">✕</button>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <div style="margin: 20px 0 10px;">

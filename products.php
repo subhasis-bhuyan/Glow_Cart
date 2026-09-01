@@ -139,12 +139,16 @@ if (empty($products)) {
 ?>
 
 <main class="container">
+    <div class="mobile-filter-overlay" id="mobileFilterOverlay" aria-hidden="true"></div>
     <div class="shop-layout">
         <!-- Filter & Search Sidebar -->
         <aside class="filter-sidebar">
             <div class="filter-header">
-                <h3 style="font-size: 16px; margin: 0;">Filters</h3>
-                <a href="products.php" style="font-size: 12px; color: var(--primary);">Clear All</a>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3 style="font-size: 16px; margin: 0;">Filters</h3>
+                    <a href="products.php" style="font-size: 12px; color: var(--primary);">Clear All</a>
+                </div>
+                <button type="button" class="mobile-filter-drawer-close" id="mobileFilterCloseBtn" aria-label="Close filters">✕</button>
             </div>
 
             <form action="products.php" method="GET" id="filterForm">
@@ -218,6 +222,19 @@ if (empty($products)) {
 
         <!-- Product Grid Area -->
         <section>
+            <!-- Mobile Filter Trigger Bar -->
+            <div class="mobile-filter-trigger-bar">
+                <button type="button" class="mobile-filter-open-btn" id="mobileFilterOpenBtn">
+                    <span>⚡</span> Filter & Categories
+                    <?php if (!empty($active_filters)): ?>
+                        <span class="cart-badge-inline"><?= count($active_filters) ?></span>
+                    <?php endif; ?>
+                </button>
+                <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">
+                    <?= count($products) ?> items found
+                </div>
+            </div>
+
             <!-- Top Controls Bar -->
             <div class="shop-top-bar">
                 <div>
@@ -283,7 +300,7 @@ if (empty($products)) {
                                     <?= $is_fav ? '❤️' : '🤍' ?>
                                 </button>
                                 <div class="product-actions-overlay">
-                                    <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                    <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn action-qv-btn" data-quickview-id="<?= $product['id'] ?>" title="Quick View">👁️</a>
                                     <button type="button" 
                                             class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
                                             onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
@@ -454,7 +471,7 @@ if (empty($products)) {
                                             <?= $is_fav ? '❤️' : '🤍' ?>
                                         </button>
                                         <div class="product-actions-overlay">
-                                            <a href="product_details.php?id=<?= $rec_prod['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                            <a href="product_details.php?id=<?= $rec_prod['id'] ?>" class="action-icon-btn action-qv-btn" data-quickview-id="<?= $rec_prod['id'] ?>" title="Quick View">👁️</a>
                                             <button type="button" 
                                                     class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
                                                     onclick="toggleFavorite(<?= $rec_prod['id'] ?>, this)" 

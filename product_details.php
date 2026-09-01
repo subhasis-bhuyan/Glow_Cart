@@ -125,6 +125,9 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
                             title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>">
                         <span class="fav-heart-icon"><?= $is_fav ? '❤️' : '🤍' ?></span> <span class="fav-btn-label"><?= $is_fav ? 'In Favorites' : 'Add to Favorites' ?></span>
                     </button>
+                    <button type="button" class="btn btn-outline btn-lg" onclick="shareCurrentProduct('<?= addslashes($product['name']) ?>', 'Check out <?= addslashes($product['name']) ?> on GlowCart!')" title="Share product">
+                        📤 Share
+                    </button>
                 </div>
             <?php else: ?>
                 <div style="background: var(--danger-bg); color: var(--danger); padding: 15px 20px; border-radius: var(--radius-md); margin-bottom: 25px; border: 1px solid rgba(198,40,40,0.2);">
@@ -143,6 +146,9 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
                             title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>">
                         <span class="fav-heart-icon"><?= $is_fav ? '❤️' : '🤍' ?></span> <span class="fav-btn-label"><?= $is_fav ? 'In Favorites' : 'Add to Favorites' ?></span>
                     </button>
+                    <button type="button" class="btn btn-outline btn-lg" onclick="shareCurrentProduct('<?= addslashes($product['name']) ?>', 'Check out <?= addslashes($product['name']) ?> on GlowCart!')" title="Share product">
+                        📤 Share
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -156,9 +162,116 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
         </div>
     </div>
 
+    <!-- Interactive Tabs Accordion Section -->
+    <div class="detail-tabs-wrapper">
+        <div class="detail-tabs-nav" role="tablist">
+            <button type="button" class="detail-tab-btn active" data-tab-target="tabOverview" role="tab">
+                ✨ Overview & Key Benefits
+            </button>
+            <button type="button" class="detail-tab-btn" data-tab-target="tabIngredients" role="tab">
+                🌿 Clean Ingredients
+            </button>
+            <button type="button" class="detail-tab-btn" data-tab-target="tabHowToUse" role="tab">
+                💡 How to Apply
+            </button>
+            <button type="button" class="detail-tab-btn" data-tab-target="tabReviews" role="tab">
+                ⭐ Verified Reviews (128)
+            </button>
+        </div>
+
+        <div class="detail-tab-pane active" id="tabOverview" role="tabpanel">
+            <h3 style="font-size: 20px; margin-bottom: 12px;">Why You Will Love It</h3>
+            <p style="margin-bottom: 16px; font-size: 15px; color: var(--text-main);">
+                <?= nl2br(htmlspecialchars($product['description'])) ?>
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px;">
+                <div style="background: var(--surface-alt); padding: 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary); font-size: 15px; display: block; margin-bottom: 4px;">⏰ 24-Hour Long Wear</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">Smudge-proof, transfer-resistant formula designed for all-day radiance.</span>
+                </div>
+                <div style="background: var(--surface-alt); padding: 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary); font-size: 15px; display: block; margin-bottom: 4px;">🌱 Clean & Vegan Formula</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">Free from parabens, phthalates, sulfates, and synthetic fragrances.</span>
+                </div>
+                <div style="background: var(--surface-alt); padding: 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary); font-size: 15px; display: block; margin-bottom: 4px;">💧 Hydrating Botanical Infusion</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">Enriched with active antioxidants, Vitamin E, and organic botanicals.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-tab-pane" id="tabIngredients" role="tabpanel">
+            <h3 style="font-size: 20px; margin-bottom: 12px;">Formulated With Pure Skin-Loving Ingredients</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+                We hold our formulas to the highest ethical and clinical cosmetic standards. Every batch is 100% cruelty-free, PETA-certified, and ethically sourced.
+            </p>
+            <div style="background: var(--surface-alt); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 13.5px; line-height: 1.8;">
+                <strong>Hero Active Ingredients:</strong> Cold-pressed Organic Jojoba Seed Oil, Pure Vitamin E (Tocopherol Acetate), Sodium Hyaluronate (Multi-molecular weight Hyaluronic Acid), Shea Butter, Plant-derived Squalane, Damask Rose Floral Extract, Niacinamide (Vitamin B3), Microfine Mineral Pigments.
+            </div>
+        </div>
+
+        <div class="detail-tab-pane" id="tabHowToUse" role="tabpanel">
+            <h3 style="font-size: 20px; margin-bottom: 12px;">Pro Makeup Artist Application Guide</h3>
+            <ol style="margin-left: 20px; line-height: 2; font-size: 14.5px; color: var(--text-main);">
+                <li><strong>Prep & Prime:</strong> Start with clean, moisturized skin. Lightly dab on lip balm or hydrating face mist.</li>
+                <li><strong>Apply Gently:</strong> Glide the applicator evenly from the center outward along your natural contours.</li>
+                <li><strong>Build & Blend:</strong> Layer for higher pigmentation or blend gently with fingertip or brush for an effortless daytime glow.</li>
+                <li><strong>Set & Lock:</strong> Allow 30 seconds to settle for transfer-resistant, comfortable all-day hold.</li>
+            </ol>
+        </div>
+
+        <div class="detail-tab-pane" id="tabReviews" role="tabpanel">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 25px;">
+                <div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--text-main); line-height: 1;">
+                        <?= number_format($product['rating'], 1) ?> <span style="font-size: 18px; color: var(--text-muted); font-weight: 400;">/ 5.0</span>
+                    </div>
+                    <div style="color: #fbc02d; font-size: 18px; margin: 4px 0;">★ ★ ★ ★ ★</div>
+                    <span style="font-size: 13px; color: var(--text-muted);">Based on 128 verified customer reviews</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="background: var(--surface-alt); padding: 18px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong>Priya S.</strong>
+                        <span style="font-size: 12px; color: var(--text-muted);">Verified Purchase &bull; 2 days ago</span>
+                    </div>
+                    <div style="color: #fbc02d; font-size: 13px; margin-bottom: 6px;">★★★★★</div>
+                    <p style="font-size: 13.5px; margin: 0;">"Absolutely obsessed with the formula! It feels weightless on the skin and lasts through meals without drying or cracking."</p>
+                </div>
+
+                <div style="background: var(--surface-alt); padding: 18px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong>Ananya D.</strong>
+                        <span style="font-size: 12px; color: var(--text-muted);">Verified Purchase &bull; 1 week ago</span>
+                    </div>
+                    <div style="color: #fbc02d; font-size: 13px; margin-bottom: 6px;">★★★★★</div>
+                    <p style="font-size: 13.5px; margin: 0;">"The pigmentation is so rich and buttery! GlowCart shipping was super fast and arrived in pristine luxury packaging."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Mobile Purchase Bar -->
+    <?php if ($product['stock'] > 0): ?>
+        <div class="detail-sticky-bar" id="detailStickyBar">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="width: 40px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0;">
+                <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= htmlspecialchars($product['name']) ?></div>
+                    <strong style="color: var(--primary); font-size: 14px;"><?= format_price($effective_price) ?></strong>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleDetailAddToCart()" style="flex-shrink: 0; padding: 9px 18px;">
+                🛍️ Add to Cart
+            </button>
+        </div>
+    <?php endif; ?>
+
     <!-- Related Products -->
     <?php if (!empty($related_products)): ?>
-        <section class="section" style="padding-top: 20px;">
+        <section class="section" style="padding-top: 40px;">
             <div class="section-header">
                 <div class="section-subtitle">You May Also Like</div>
                 <h2 class="section-title">Related Beauty Items</h2>
@@ -177,6 +290,19 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
                                     data-product-id="<?= $rel['id'] ?>">
                                 <?= $rel_is_fav ? '❤️' : '🤍' ?>
                             </button>
+                            <div class="product-actions-overlay">
+                                <a href="product_details.php?id=<?= $rel['id'] ?>" class="action-icon-btn action-qv-btn" data-quickview-id="<?= $rel['id'] ?>" title="Quick View">👁️</a>
+                                <button type="button" 
+                                        class="action-icon-btn action-fav-btn <?= $rel_is_fav ? 'active' : '' ?>" 
+                                        onclick="toggleFavorite(<?= $rel['id'] ?>, this)" 
+                                        title="<?= $rel_is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                        data-product-id="<?= $rel['id'] ?>">
+                                    <?= $rel_is_fav ? '❤️' : '🤍' ?>
+                                </button>
+                                <?php if ($rel['stock'] > 0): ?>
+                                    <button type="button" class="action-icon-btn" onclick="addToCart(<?= $rel['id'] ?>, 1)" title="Add to Cart">🛍️</button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="product-info">
                             <div class="product-category"><?= htmlspecialchars($rel['category']) ?></div>

@@ -62,6 +62,25 @@
         </div>
     </footer>
 
+    <!-- Global Floating Back to Top Button -->
+    <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Scroll back to top" title="Scroll to top">
+        ↑
+    </button>
+
+    <!-- Global Interactive Quick View Product Modal -->
+    <div class="quickview-modal-overlay" id="quickViewModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="qvProductTitle">
+        <div class="quickview-modal-box">
+            <button type="button" class="quickview-close-btn" id="closeQuickViewBtn" aria-label="Close product quick view">✕</button>
+            <div class="quickview-content-grid" id="quickViewContent">
+                <!-- Populated dynamically by script.js -->
+                <div class="quickview-loading-state">
+                    <div class="search-spinner" style="width: 32px; height: 32px; margin: 0 auto 12px;"></div>
+                    <p>Loading beauty details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Engine -->
     <script src="assets/js/script.js"></script>
 

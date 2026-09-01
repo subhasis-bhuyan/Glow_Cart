@@ -1,34 +1,72 @@
 /**
  * GlowCart Cosmetics - Main JavaScript Engine
- * Features: Mobile Nav, Toast Notifications, AJAX Cart, Order Management
+ * Features: Mobile Nav, Toast Notifications, AJAX Cart, Quick View, Order Management
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
+  initMobileSearch();
   initQuantityControls();
   initOrderCancellation();
   initLiveSearch();
+  initBackToTop();
+  initQuickViewModal();
+  initLiveCartUpdates();
+  initCouponEngine();
+  initProductDetailFeatures();
+  initMobileFilterDrawer();
 });
 
 // --------------------------------------------------------------------------
-// 1. Mobile Menu Toggle
+// 1. Mobile Menu & Off-Canvas Drawer Toggle
 // --------------------------------------------------------------------------
 function initMobileMenu() {
-  const toggleBtn = document.querySelector('.mobile-nav-toggle');
-  const navLinks = document.querySelector('.nav-links');
+  const toggleBtn = document.getElementById('mobileNavToggleBtn') || document.querySelector('.mobile-nav-toggle');
+  const drawer = document.getElementById('mobileDrawer');
+  const overlay = document.getElementById('mobileDrawerOverlay');
+  const closeBtn = document.getElementById('drawerCloseBtn');
 
-  if (toggleBtn && navLinks) {
-    toggleBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-      toggleBtn.innerHTML = navLinks.classList.contains('active') ? '✕' : '☰';
-    });
-  }
+  if (!drawer || !toggleBtn) return;
+
+  const openDrawer = () => {
+    drawer.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    toggleBtn.classList.add('active');
+    toggleBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('no-scroll');
+  };
+
+  const closeDrawer = () => {
+    drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    toggleBtn.classList.remove('active');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('no-scroll');
+  };
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (drawer.classList.contains('active')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('active')) {
+      closeDrawer();
+    }
+  });
 }
 
 // --------------------------------------------------------------------------
-// 2. Toast Notification System
+// 2. Toast Notification System with Action Links
 // --------------------------------------------------------------------------
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', actionUrl = null, actionText = 'View') {
   let container = document.querySelector('.toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -38,7 +76,13 @@ function showToast(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span>${message}</span>`;
+  
+  let actionHtml = '';
+  if (actionUrl) {
+    actionHtml = `<a href="${actionUrl}" class="toast-action-btn" style="margin-left: 10px; color: #ffffff; text-decoration: underline; font-weight: 600; font-size: 12.5px;">${actionText}</a>`;
+  }
+  
+  toast.innerHTML = `<span>${message}</span>${actionHtml}`;
   container.appendChild(toast);
 
   // Trigger animation
@@ -46,13 +90,13 @@ function showToast(message, type = 'success') {
     toast.classList.add('show');
   });
 
-  // Remove after 3.5 seconds
+  // Remove after 3.8 seconds
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => {
       toast.remove();
     }, 300);
-  }, 3500);
+  }, 3800);
 }
 
 // --------------------------------------------------------------------------
@@ -74,7 +118,7 @@ function addToCart(productId, quantity = 1, callback = null) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        showToast(data.message || '✓ Product added to cart', 'success');
+        showToast(data.message || '✓ Product added to cart', 'success', 'cart.php', 'View Cart ➔');
         updateCartBadge(data.cart_count);
         if (typeof callback === 'function') callback(true, data);
       } else {
@@ -90,14 +134,13 @@ function addToCart(productId, quantity = 1, callback = null) {
 }
 
 function updateCartBadge(count) {
-  const badge = document.querySelector('.cart-badge');
-  if (badge) {
+  document.querySelectorAll('.cart-badge, .bottom-nav-badge, .cart-badge-inline').forEach(badge => {
     badge.textContent = count;
-    badge.style.transform = 'scale(1.3)';
+    badge.style.transform = 'scale(1.35)';
     setTimeout(() => {
       badge.style.transform = 'scale(1)';
-    }, 200);
-  }
+    }, 250);
+  });
 }
 
 // --------------------------------------------------------------------------
@@ -672,4 +715,565 @@ function applyPricePreset(min, max) {
     form.submit();
   }
 }
+
+// --------------------------------------------------------------------------
+// 11. Mobile Search Bar Toggle
+// --------------------------------------------------------------------------
+function initMobileSearch() {
+  const searchToggleBtn = document.getElementById('mobileSearchToggleBtn');
+  const bottomSearchBtn = document.getElementById('bottomNavSearchBtn');
+  const searchWrapper = document.getElementById('navSearchWrapper');
+  const searchInput = document.getElementById('navSearchInput');
+
+  const toggleSearch = (e) => {
+    if (e) e.preventDefault();
+    if (!searchWrapper) return;
+
+    const isActive = searchWrapper.classList.toggle('active');
+    if (searchToggleBtn) searchToggleBtn.classList.toggle('active', isActive);
+
+    if (isActive && searchInput) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => searchInput.focus(), 150);
+    }
+  };
+
+  if (searchToggleBtn) searchToggleBtn.addEventListener('click', toggleSearch);
+  if (bottomSearchBtn) bottomSearchBtn.addEventListener('click', toggleSearch);
+}
+
+// --------------------------------------------------------------------------
+// 12. Floating Back-to-Top Button
+// --------------------------------------------------------------------------
+function initBackToTop() {
+  const btn = document.getElementById('backToTopBtn');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 280) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }, { passive: true });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// --------------------------------------------------------------------------
+// 13. Interactive Quick View Modal
+// --------------------------------------------------------------------------
+function initQuickViewModal() {
+  const modal = document.getElementById('quickViewModal');
+  const content = document.getElementById('quickViewContent');
+  const closeBtn = document.getElementById('closeQuickViewBtn');
+
+  if (!modal || !content) return;
+
+  const closeModal = () => {
+    modal.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+
+  // Delegate clicks on any Quick View trigger
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-quickview-id]');
+    if (!trigger) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const productId = trigger.getAttribute('data-quickview-id');
+    if (!productId) return;
+
+    openQuickView(productId);
+  });
+
+  const openQuickView = (productId) => {
+    modal.classList.add('active');
+    document.body.classList.add('no-scroll');
+
+    content.innerHTML = `
+      <div class="quickview-loading-state">
+        <div class="search-spinner" style="width: 36px; height: 36px; margin: 0 auto 12px;"></div>
+        <p style="color: var(--text-muted); font-size: 14px;">Loading beauty product details...</p>
+      </div>
+    `;
+
+    const ajaxUrl = window.location.pathname.includes('/admin/') ? '../ajax_cart.php' : 'ajax_cart.php';
+
+    fetch(`${ajaxUrl}?action=quick_view&product_id=${productId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.product) {
+          content.innerHTML = `
+            <div style="padding: 40px; text-align: center; grid-column: 1 / -1;">
+              <h3>Could not load product details</h3>
+              <p style="color: var(--text-muted); margin-top: 6px;">Please try visiting the product page directly.</p>
+            </div>
+          `;
+          return;
+        }
+
+        renderQuickViewProduct(data.product);
+      })
+      .catch(err => {
+        console.error('Quick View Error:', err);
+        content.innerHTML = `
+          <div style="padding: 40px; text-align: center; grid-column: 1 / -1;">
+            <h3>Connection Error</h3>
+            <p style="color: var(--text-muted); margin-top: 6px;">Could not connect to the server.</p>
+          </div>
+        `;
+      });
+  };
+
+  const renderQuickViewProduct = (p) => {
+    const priceHtml = p.has_discount
+      ? `<span class="quickview-price">${p.formatted_price}</span>
+         <span style="font-size: 15px; color: var(--text-muted); text-decoration: line-through;">${p.formatted_original_price}</span>
+         <span class="badge badge-sale" style="font-size: 11px;">-${p.discount_percent}% OFF</span>`
+      : `<span class="quickview-price">${p.formatted_price}</span>`;
+
+    const stockBadge = p.in_stock
+      ? `<span class="badge badge-in-stock">✓ In Stock (${p.stock} available)</span>`
+      : `<span class="badge badge-out-of-stock">✕ Out of Stock</span>`;
+
+    content.innerHTML = `
+      <div class="quickview-image-wrap">
+        <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" onerror="this.src='https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80'">
+      </div>
+      <div class="quickview-details">
+        <div class="quickview-category">${escapeHtml(p.category)}</div>
+        <h2 class="quickview-title" id="qvProductTitle">${escapeHtml(p.name)}</h2>
+
+        <div class="quickview-rating">
+          <span style="color: #fbc02d; font-size: 15px;">★ ★ ★ ★ ★</span>
+          <strong>${p.rating.toFixed(1)}</strong>
+          <span style="color: var(--text-muted); font-size: 12px;">(Verified Beauty Rating)</span>
+        </div>
+
+        <div class="quickview-price-box">
+          ${priceHtml}
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          ${stockBadge}
+        </div>
+
+        <p class="quickview-desc">${escapeHtml(p.description)}</p>
+
+        ${p.in_stock ? `
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Quantity:</label>
+            <div class="quantity-control">
+              <button type="button" class="qty-btn" id="qvMinusBtn">-</button>
+              <input type="number" id="qvQtyInput" class="qty-input" value="1" min="1" max="${p.stock}" readonly>
+              <button type="button" class="qty-btn" id="qvPlusBtn">+</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-lg" id="qvAddToCartBtn" style="flex: 1; min-width: 160px;">
+              🛍️ Add to Cart
+            </button>
+            <a href="${p.url}" class="btn btn-outline btn-lg" style="flex: 1; min-width: 140px;">
+              View Full Details &rarr;
+            </a>
+          </div>
+        ` : `
+          <a href="${p.url}" class="btn btn-outline btn-lg btn-block">
+            View Similar Products &rarr;
+          </a>
+        `}
+      </div>
+    `;
+
+    if (p.in_stock) {
+      const qvMinus = document.getElementById('qvMinusBtn');
+      const qvPlus = document.getElementById('qvPlusBtn');
+      const qvInput = document.getElementById('qvQtyInput');
+      const qvAddBtn = document.getElementById('qvAddToCartBtn');
+
+      if (qvMinus && qvPlus && qvInput) {
+        qvMinus.addEventListener('click', () => {
+          let val = parseInt(qvInput.value) || 1;
+          if (val > 1) qvInput.value = val - 1;
+        });
+
+        qvPlus.addEventListener('click', () => {
+          let val = parseInt(qvInput.value) || 1;
+          if (val < p.stock) {
+            qvInput.value = val + 1;
+          } else {
+            showToast(`Maximum available stock is ${p.stock}`, 'error');
+          }
+        });
+      }
+
+      if (qvAddBtn && qvInput) {
+        qvAddBtn.addEventListener('click', () => {
+          const qty = parseInt(qvInput.value) || 1;
+          qvAddBtn.disabled = true;
+          qvAddBtn.textContent = 'Adding...';
+
+          addToCart(p.id, qty, (success) => {
+            qvAddBtn.disabled = false;
+            qvAddBtn.textContent = success ? '✓ Added!' : '🛍️ Add to Cart';
+            if (success) {
+              setTimeout(() => {
+                closeModal();
+              }, 1000);
+            }
+          });
+        });
+      }
+    }
+  };
+}
+
+// --------------------------------------------------------------------------
+// 14. Real-time AJAX Cart Quantity & Price Recalculation Engine
+// --------------------------------------------------------------------------
+function initLiveCartUpdates() {
+  const cartTable = document.querySelector('.cart-table');
+  if (!cartTable) return;
+
+  // Listen for quantity change events on the cart page
+  document.querySelectorAll('.cart-table .quantity-control').forEach(ctrl => {
+    const input = ctrl.querySelector('.qty-input');
+    const btnMinus = ctrl.querySelector('.qty-minus');
+    const btnPlus = ctrl.querySelector('.qty-plus');
+
+    if (!input) return;
+
+    // Extract product ID from name="quantities[PID]"
+    const match = input.name.match(/\[(\d+)\]/);
+    if (!match) return;
+    const productId = parseInt(match[1]);
+
+    const triggerUpdate = (newQty) => {
+      ctrl.style.opacity = '0.6';
+
+      const formData = new FormData();
+      formData.append('action', 'update');
+      formData.append('product_id', productId);
+      formData.append('quantity', newQty);
+
+      fetch('ajax_cart.php', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          ctrl.style.opacity = '1';
+          if (data.success) {
+            updateCartBadge(data.cart_count);
+            updateCartSummaryDOM(data);
+
+            // Update item line subtotal
+            const lineSubEl = document.getElementById(`lineSubtotal-${productId}`);
+            if (lineSubEl && data.formatted_item_line_subtotal) {
+              lineSubEl.textContent = data.formatted_item_line_subtotal;
+              lineSubEl.style.transform = 'scale(1.15)';
+              setTimeout(() => lineSubEl.style.transform = '', 200);
+            }
+
+            if (data.cart_empty) {
+              setTimeout(() => window.location.reload(), 300);
+            }
+          } else {
+            showToast(data.message || 'Could not update quantity', 'error');
+          }
+        })
+        .catch(err => {
+          ctrl.style.opacity = '1';
+          console.error('Cart live update error:', err);
+        });
+    };
+
+    // Override or hook into plus/minus
+    if (btnMinus) {
+      btnMinus.addEventListener('click', () => {
+        const val = parseInt(input.value) || 1;
+        triggerUpdate(val);
+      });
+    }
+
+    if (btnPlus) {
+      btnPlus.addEventListener('click', () => {
+        const val = parseInt(input.value) || 1;
+        triggerUpdate(val);
+      });
+    }
+  });
+}
+
+function updateCartSummaryDOM(data) {
+  const subtotalEl = document.getElementById('cartSubtotalDisplay');
+  const discountRow = document.getElementById('cartDiscountRow');
+  const discountEl = document.getElementById('cartDiscountDisplay');
+  const deliveryEl = document.getElementById('cartDeliveryDisplay');
+  const grandTotalEl = document.getElementById('cartGrandTotalDisplay');
+
+  if (subtotalEl && data.formatted_subtotal) {
+    subtotalEl.textContent = data.formatted_subtotal;
+  }
+
+  if (discountRow && discountEl) {
+    if (data.discount > 0) {
+      discountRow.style.display = 'flex';
+      discountEl.textContent = data.formatted_discount;
+    } else {
+      discountRow.style.display = 'none';
+    }
+  }
+
+  if (deliveryEl && data.formatted_delivery_charge) {
+    deliveryEl.innerHTML = data.delivery_charge === 0 
+      ? '<span style="color: var(--success);">FREE</span>' 
+      : data.formatted_delivery_charge;
+  }
+
+  if (grandTotalEl && data.formatted_grand_total) {
+    grandTotalEl.textContent = data.formatted_grand_total;
+    grandTotalEl.style.transform = 'scale(1.1)';
+    setTimeout(() => grandTotalEl.style.transform = '', 250);
+  }
+}
+
+// Override removeItemFromCart for smooth row deletion
+function removeItemFromCart(productId) {
+  if (!confirm('Remove this item from your shopping cart?')) return;
+
+  const formData = new FormData();
+  formData.append('action', 'remove');
+  formData.append('product_id', productId);
+
+  fetch('ajax_cart.php', {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast('Item removed from cart', 'info');
+        updateCartBadge(data.cart_count);
+
+        // Animate row removal
+        const row = document.getElementById(`cartRow-${productId}`);
+        if (row) {
+          row.style.transition = 'all 0.3s ease';
+          row.style.opacity = '0';
+          row.style.transform = 'scale(0.9) translateY(10px)';
+          setTimeout(() => {
+            row.remove();
+            if (data.cart_empty) {
+              window.location.reload();
+            } else {
+              updateCartSummaryDOM(data);
+            }
+          }, 300);
+        } else {
+          window.location.reload();
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Cart item remove error:', err);
+      window.location.href = `cart.php?action=remove&id=${productId}`;
+    });
+}
+
+// --------------------------------------------------------------------------
+// 15. Interactive Promo Coupon Engine
+// --------------------------------------------------------------------------
+function initCouponEngine() {
+  const applyBtn = document.getElementById('applyCouponBtn');
+  const input = document.getElementById('couponCodeInput');
+  const removeBtn = document.getElementById('removeCouponBtn');
+
+  if (!applyBtn || !input) return;
+
+  applyBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const code = input.value.trim();
+    if (!code) {
+      showToast('Please enter a coupon code', 'info');
+      input.focus();
+      return;
+    }
+
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Verifying...';
+
+    const formData = new FormData();
+    formData.append('action', 'apply_coupon');
+    formData.append('coupon_code', code);
+
+    fetch('ajax_cart.php', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply';
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          if (data.totals) {
+            updateCartSummaryDOM(data.totals);
+          }
+          // Show applied badge
+          const badgeWrap = document.getElementById('appliedCouponBadgeWrap');
+          if (badgeWrap) {
+            badgeWrap.innerHTML = `
+              <div class="cart-coupon-badge-applied">
+                <span>🎉 Coupon <strong>${escapeHtml(data.code)}</strong> Applied!</span>
+                <button type="button" class="cart-coupon-remove-btn" onclick="removeCouponCode()">✕</button>
+              </div>
+            `;
+          }
+        } else {
+          showToast(data.message || 'Invalid coupon code', 'error');
+          input.classList.add('shake-anim');
+          setTimeout(() => input.classList.remove('shake-anim'), 400);
+        }
+      })
+      .catch(err => {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply';
+        console.error('Coupon error:', err);
+      });
+  });
+}
+
+function removeCouponCode() {
+  const formData = new FormData();
+  formData.append('action', 'apply_coupon');
+  formData.append('coupon_code', '');
+
+  fetch('ajax_cart.php', {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      showToast('Coupon removed', 'info');
+      const badgeWrap = document.getElementById('appliedCouponBadgeWrap');
+      if (badgeWrap) badgeWrap.innerHTML = '';
+      const input = document.getElementById('couponCodeInput');
+      if (input) input.value = '';
+      if (data.totals) updateCartSummaryDOM(data.totals);
+    });
+}
+
+// --------------------------------------------------------------------------
+// 16. Product Details Interactive Tabs & Sticky Mobile Purchase Bar
+// --------------------------------------------------------------------------
+function initProductDetailFeatures() {
+  // Tabs Navigation
+  const tabBtns = document.querySelectorAll('.detail-tab-btn');
+  const tabPanes = document.querySelectorAll('.detail-tab-pane');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-tab-target');
+      if (!targetId) return;
+
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanes.forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      const pane = document.getElementById(targetId);
+      if (pane) pane.classList.add('active');
+    });
+  });
+
+  // Sticky Mobile Purchase Bar
+  const stickyBar = document.getElementById('detailStickyBar');
+  const mainActions = document.querySelector('.detail-actions');
+
+  if (stickyBar && mainActions) {
+    window.addEventListener('scroll', () => {
+      if (window.innerWidth <= 768) {
+        const rect = mainActions.getBoundingClientRect();
+        if (rect.bottom < 0) {
+          stickyBar.classList.add('visible');
+        } else {
+          stickyBar.classList.remove('visible');
+        }
+      } else {
+        stickyBar.classList.remove('visible');
+      }
+    }, { passive: true });
+  }
+}
+
+// Share Product Feature
+function shareCurrentProduct(title, text) {
+  if (navigator.share) {
+    navigator.share({
+      title: title || document.title,
+      text: text || 'Check out this luxury beauty product on GlowCart Cosmetics!',
+      url: window.location.href
+    }).catch(err => console.log('Share dismissed', err));
+  } else {
+    // Clipboard copy fallback
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      showToast('✓ Link copied to clipboard!', 'success');
+    }).catch(() => {
+      showToast('Could not copy link', 'info');
+    });
+  }
+}
+
+// --------------------------------------------------------------------------
+// 17. Mobile Filter Drawer (products.php)
+// --------------------------------------------------------------------------
+function initMobileFilterDrawer() {
+  const openBtn = document.getElementById('mobileFilterOpenBtn');
+  const closeBtn = document.getElementById('mobileFilterCloseBtn');
+  const sidebar = document.querySelector('.filter-sidebar');
+  const overlay = document.getElementById('mobileFilterOverlay');
+
+  if (!sidebar) return;
+
+  const openDrawer = () => {
+    sidebar.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    document.body.classList.add('no-scroll');
+  };
+
+  const closeDrawer = () => {
+    sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  };
+
+  if (openBtn) openBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+      closeDrawer();
+    }
+  });
+}
+
 

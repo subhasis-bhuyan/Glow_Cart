@@ -158,7 +158,7 @@ try {
                                 <?= $is_fav ? '❤️' : '🤍' ?>
                             </button>
                             <div class="product-actions-overlay">
-                                <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn action-qv-btn" data-quickview-id="<?= $product['id'] ?>" title="Quick View">👁️</a>
                                 <button type="button" 
                                         class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
                                         onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
@@ -263,7 +263,7 @@ try {
                                 <?= $is_fav ? '❤️' : '🤍' ?>
                             </button>
                             <div class="product-actions-overlay">
-                                <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn action-qv-btn" data-quickview-id="<?= $product['id'] ?>" title="Quick View">👁️</a>
                                 <button type="button" 
                                         class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
                                         onclick="toggleFavorite(<?= $product['id'] ?>, this)" 

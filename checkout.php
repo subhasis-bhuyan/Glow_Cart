@@ -61,8 +61,16 @@ foreach ($_SESSION['cart'] as $pid => $item) {
 }
 
 $delivery_charge = ($subtotal >= 500) ? 0.00 : 50.00;
-$discount = ($subtotal > 1000) ? round($subtotal * 0.10, 2) : 0.00;
-$grand_total = $subtotal - $discount + $delivery_charge;
+$applied_coupon = $_SESSION['applied_coupon'] ?? null;
+$coupon_discount = 0.00;
+if ($applied_coupon === 'GLOW15' && $subtotal >= 500) {
+    $coupon_discount = round($subtotal * 0.15, 2);
+} elseif ($applied_coupon === 'GLOW20' && $subtotal >= 1000) {
+    $coupon_discount = round($subtotal * 0.20, 2);
+}
+$tier_discount = ($subtotal > 1000 && empty($applied_coupon)) ? round($subtotal * 0.10, 2) : 0.00;
+$discount = $coupon_discount > 0 ? $coupon_discount : $tier_discount;
+$grand_total = max(0.00, $subtotal - $discount + $delivery_charge);
 
 // Handle Order Placement POST Request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -239,7 +247,7 @@ require_once __DIR__ . '/includes/navbar.php';
                         <textarea id="address" name="address" class="form-control" rows="2" placeholder="e.g. Flat 402, Rose Villa, MG Road" required><?= htmlspecialchars($_POST['address'] ?? ($user['address'] ?? '')) ?></textarea>
                     </div>
 
-                    <div class="form-grid-2" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label for="city" class="form-label">City *</label>
                             <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($_POST['city'] ?? ($user['city'] ?? '')) ?>" required>
@@ -311,7 +319,7 @@ require_once __DIR__ . '/includes/navbar.php';
 
                 <?php if ($discount > 0): ?>
                     <div class="summary-row" style="color: var(--success);">
-                        <span>Promo Discount (10%)</span>
+                        <span>Discount <?= !empty($applied_coupon) ? '(' . htmlspecialchars($applied_coupon) . ')' : '(Tier 10%)' ?></span>
                         <strong>-<?= format_price($discount) ?></strong>
                     </div>
                 <?php endif; ?>
