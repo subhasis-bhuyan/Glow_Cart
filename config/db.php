@@ -50,6 +50,26 @@ try {
     }
 }
 
+// Ensure favorites table exists
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `favorites` (
+          `id` INT(11) NOT NULL AUTO_INCREMENT,
+          `user_id` INT(11) NOT NULL,
+          `product_id` INT(11) NOT NULL,
+          `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `user_product_unique` (`user_id`, `product_id`),
+          KEY `fk_favorites_user` (`user_id`),
+          KEY `fk_favorites_product` (`product_id`),
+          CONSTRAINT `fk_favorites_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+          CONSTRAINT `fk_favorites_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+} catch (PDOException $e) {
+    // Graceful fallback if table cannot be auto-created
+}
+
 // ----------------------------------------------------
 // Core Helper Functions
 // ----------------------------------------------------
@@ -106,6 +126,51 @@ function get_cart_count(): int {
 }
 
 /**
+ * Get array of favorited product IDs for a given user
+ */
+function get_user_favorite_ids(int $user_id): array {
+    global $pdo;
+    if ($user_id <= 0) return [];
+    try {
+        $stmt = $pdo->prepare("SELECT product_id FROM favorites WHERE user_id = :uid");
+        $stmt->execute([':uid' => $user_id]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+/**
+ * Get total favorite count for a given user
+ */
+function get_favorite_count(int $user_id): int {
+    global $pdo;
+    if ($user_id <= 0) return 0;
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM favorites WHERE user_id = :uid");
+        $stmt->execute([':uid' => $user_id]);
+        return (int)$stmt->fetchColumn();
+    } catch (PDOException $e) {
+        return 0;
+    }
+}
+
+/**
+ * Check if a product is in user's favorites
+ */
+function is_product_favorite(int $user_id, int $product_id): bool {
+    global $pdo;
+    if ($user_id <= 0 || $product_id <= 0) return false;
+    try {
+        $stmt = $pdo->prepare("SELECT 1 FROM favorites WHERE user_id = :uid AND product_id = :pid LIMIT 1");
+        $stmt->execute([':uid' => $user_id, ':pid' => $product_id]);
+        return (bool)$stmt->fetchColumn();
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
+/**
  * Format price in Indian Rupee (INR) format
  */
 function format_price($price): string {
@@ -118,3 +183,22 @@ function format_price($price): string {
 function clean_input($data): string {
     return htmlspecialchars(trim((string)$data), ENT_QUOTES, 'UTF-8');
 }
+
+/**
+ * Highlight search matches in a string safely
+ */
+function highlight_text(?string $text, ?string $query): string {
+    if ($text === null || $text === '') {
+        return '';
+    }
+    $escaped_text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    if ($query === null || trim($query) === '') {
+        return $escaped_text;
+    }
+    $escaped_query = preg_quote(trim($query), '/');
+    if (empty($escaped_query)) {
+        return $escaped_text;
+    }
+    return preg_replace('/(' . $escaped_query . ')/i', '<mark class="search-highlight">$1</mark>', $escaped_text);
+}
+

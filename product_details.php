@@ -32,6 +32,10 @@ try {
     die("Database query error.");
 }
 
+$user_id = (int)($_SESSION['user_id'] ?? 0);
+$is_fav = is_logged_in() ? is_product_favorite($user_id, (int)$product['id']) : false;
+$user_favorite_ids = is_logged_in() ? get_user_favorite_ids($user_id) : [];
+
 $page_title = htmlspecialchars($product['name']) . ' | GlowCart Cosmetics';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/navbar.php';
@@ -106,12 +110,20 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
                     </div>
                 </div>
 
-                <div class="detail-actions">
+                <div class="detail-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary btn-lg" onclick="handleDetailAddToCart()">
                         🛍️ Add to Cart
                     </button>
                     <button type="button" class="btn btn-secondary btn-lg" onclick="handleDetailBuyNow()">
                         ⚡ Buy Now
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline btn-lg detail-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                            id="detailFavBtn" 
+                            onclick="toggleFavorite(<?= $product['id'] ?>, this)"
+                            data-product-id="<?= $product['id'] ?>"
+                            title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>">
+                        <span class="fav-heart-icon"><?= $is_fav ? '❤️' : '🤍' ?></span> <span class="fav-btn-label"><?= $is_fav ? 'In Favorites' : 'Add to Favorites' ?></span>
                     </button>
                 </div>
             <?php else: ?>
@@ -119,9 +131,17 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
                     <strong>This product is currently out of stock.</strong>
                     <p style="font-size: 13px; margin: 4px 0 0;">Please check back later or explore similar beauty items below.</p>
                 </div>
-                <div class="detail-actions">
+                <div class="detail-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-outline btn-lg disabled" disabled>
                         ✕ Out of Stock
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline btn-lg detail-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                            id="detailFavBtn" 
+                            onclick="toggleFavorite(<?= $product['id'] ?>, this)"
+                            data-product-id="<?= $product['id'] ?>"
+                            title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>">
+                        <span class="fav-heart-icon"><?= $is_fav ? '❤️' : '🤍' ?></span> <span class="fav-btn-label"><?= $is_fav ? 'In Favorites' : 'Add to Favorites' ?></span>
                     </button>
                 </div>
             <?php endif; ?>
@@ -146,9 +166,17 @@ $discount_pct = $has_discount ? round((($product['price'] - $product['discount_p
 
             <div class="products-grid">
                 <?php foreach ($related_products as $rel): ?>
+                    <?php $rel_is_fav = in_array((int)$rel['id'], $user_favorite_ids); ?>
                     <div class="product-card">
                         <div class="product-thumb">
                             <img src="<?= htmlspecialchars($rel['image']) ?>" alt="<?= htmlspecialchars($rel['name']) ?>" loading="lazy">
+                            <button type="button" 
+                                    class="card-fav-btn <?= $rel_is_fav ? 'active' : '' ?>" 
+                                    onclick="toggleFavorite(<?= $rel['id'] ?>, this)" 
+                                    title="<?= $rel_is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                    data-product-id="<?= $rel['id'] ?>">
+                                <?= $rel_is_fav ? '❤️' : '🤍' ?>
+                            </button>
                         </div>
                         <div class="product-info">
                             <div class="product-category"><?= htmlspecialchars($rel['category']) ?></div>

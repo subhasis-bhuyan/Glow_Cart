@@ -7,6 +7,8 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/navbar.php';
 
+$user_favorite_ids = is_logged_in() ? get_user_favorite_ids((int)$_SESSION['user_id']) : [];
+
 // Fetch unique categories for filter list
 try {
     $cat_stmt = $pdo->query("SELECT DISTINCT category FROM products WHERE status = 'Active' ORDER BY category ASC");
@@ -84,10 +86,17 @@ try {
             </div>
 
             <form action="products.php" method="GET" id="filterForm">
-                <!-- Preserve Search if present -->
-                <?php if (!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
-                <?php endif; ?>
+                <!-- Search Query Input in Sidebar -->
+                <div class="filter-group">
+                    <div class="filter-title">Search Keywords</div>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="text" name="search" id="sidebarSearchInput" class="price-input" style="width: 100%; padding-left: 28px; padding-right: 28px; height: 38px;" placeholder="Search cosmetics..." value="<?= htmlspecialchars($search) ?>">
+                        <span style="position: absolute; left: 8px; font-size: 13px; color: var(--text-muted); pointer-events: none;">🔍</span>
+                        <?php if (!empty($search)): ?>
+                            <a href="products.php<?= !empty($category) ? '?category=' . urlencode($category) : '' ?>" style="position: absolute; right: 8px; font-size: 12px; color: var(--text-muted); text-decoration: none; padding: 2px 5px;" title="Clear search">✕</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
 
                 <!-- Categories -->
                 <div class="filter-group">
@@ -141,16 +150,17 @@ try {
             <!-- Top Controls Bar -->
             <div class="shop-top-bar">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 4px;">
+                    <h1 style="font-size: 24px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <?php if (!empty($category)): ?>
                             <?= htmlspecialchars($category) ?>
                         <?php elseif (!empty($search)): ?>
-                            Search: "<?= htmlspecialchars($search) ?>"
+                            Search: "<span style="color: var(--primary);"><?= htmlspecialchars($search) ?></span>"
+                            <a href="products.php" class="badge badge-sale" style="font-size: 11px; text-decoration: none; padding: 3px 8px;" title="Clear search query">✕ Clear</a>
                         <?php else: ?>
                             All Beauty Products
                         <?php endif; ?>
                     </h1>
-                    <span style="font-size: 13px; color: var(--text-muted);"><?= count($products) ?> items found</span>
+                    <span style="font-size: 13px; color: var(--text-muted);"><?= count($products) ?> <?= count($products) === 1 ? 'item' : 'items' ?> found</span>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -168,6 +178,7 @@ try {
             <?php if (!empty($products)): ?>
                 <div class="products-grid">
                     <?php foreach ($products as $product): ?>
+                        <?php $is_fav = in_array((int)$product['id'], $user_favorite_ids); ?>
                         <div class="product-card">
                             <div class="product-thumb">
                                 <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
@@ -177,8 +188,22 @@ try {
                                         <span class="badge badge-sale"><?= $pct ?>% OFF</span>
                                     <?php endif; ?>
                                 </div>
+                                <button type="button" 
+                                        class="card-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                        onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                        title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                        data-product-id="<?= $product['id'] ?>">
+                                    <?= $is_fav ? '❤️' : '🤍' ?>
+                                </button>
                                 <div class="product-actions-overlay">
                                     <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                    <button type="button" 
+                                            class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                            onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                            title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                            data-product-id="<?= $product['id'] ?>">
+                                        <?= $is_fav ? '❤️' : '🤍' ?>
+                                    </button>
                                     <?php if ($product['stock'] > 0): ?>
                                         <button type="button" class="action-icon-btn" onclick="addToCart(<?= $product['id'] ?>, 1)" title="Add to Cart">🛍️</button>
                                     <?php endif; ?>
@@ -186,9 +211,9 @@ try {
                             </div>
 
                             <div class="product-info">
-                                <div class="product-category"><?= htmlspecialchars($product['category']) ?></div>
+                                <div class="product-category"><?= highlight_text($product['category'], $search) ?></div>
                                 <h3 class="product-title">
-                                    <a href="product_details.php?id=<?= $product['id'] ?>"><?= htmlspecialchars($product['name']) ?></a>
+                                    <a href="product_details.php?id=<?= $product['id'] ?>"><?= highlight_text($product['name'], $search) ?></a>
                                 </h3>
 
                                 <div class="product-rating">
@@ -232,8 +257,18 @@ try {
                 <div style="background: var(--surface); padding: 50px 30px; text-align: center; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                     <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
                     <h3 style="font-size: 20px; margin-bottom: 10px;">No Products Found</h3>
-                    <p style="margin-bottom: 20px;">We could not find any cosmetic products matching your current search or filter criteria.</p>
-                    <a href="products.php" class="btn btn-primary">Reset All Filters</a>
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">
+                        <?php if (!empty($search)): ?>
+                            We could not find any cosmetic products matching "<strong><?= htmlspecialchars($search) ?></strong>".
+                        <?php else: ?>
+                            We could not find any cosmetic products matching your current filter criteria.
+                        <?php endif; ?>
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <a href="products.php" class="btn btn-primary">Reset All Filters</a>
+                        <a href="products.php?category=Lipstick" class="btn btn-outline">Explore Lipsticks</a>
+                        <a href="products.php?category=Skincare" class="btn btn-outline">Explore Skincare</a>
+                    </div>
                 </div>
             <?php endif; ?>
         </section>

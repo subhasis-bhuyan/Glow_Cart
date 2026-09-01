@@ -16,11 +16,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if ($order_id > 0 && in_array($new_status, $valid_statuses)) {
         try {
-            $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
-            $stmt->execute([':status' => $new_status, ':id' => $order_id]);
-            $_SESSION['admin_flash_success'] = "Order #GC-" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . " status updated to '{$new_status}'.";
-        } catch (PDOException $e) {
-            $_SESSION['admin_flash_error'] = 'Could not update order status.';
+            $pdo->beginTransaction();
+
+            $chk = $pdo->prepare("SELECT status, payment_method FROM orders WHERE id = :id FOR UPDATE");
+            $chk->execute([':id' => $order_id]);
+            $current_order = $chk->fetch();
+
+            if ($current_order) {
+                $prev_status = $current_order['status'];
+
+                // If transitioning to Cancelled from an active status, restore stock
+                if ($new_status === 'Cancelled' && $prev_status !== 'Cancelled') {
+                    $items_stmt = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :oid");
+                    $items_stmt->execute([':oid' => $order_id]);
+                    $items = $items_stmt->fetchAll();
+
+                    $restore_stmt = $pdo->prepare("UPDATE products SET stock = stock + :qty WHERE id = :pid");
+                    foreach ($items as $it) {
+                        if (!empty($it['product_id'])) {
+                            $restore_stmt->execute([
+                                ':qty' => (int)$it['quantity'],
+                                ':pid' => (int)$it['product_id']
+                            ]);
+                        }
+                    }
+                }
+                // If transitioning from Cancelled back to active, deduct stock
+                elseif ($prev_status === 'Cancelled' && $new_status !== 'Cancelled') {
+                    $items_stmt = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :oid");
+                    $items_stmt->execute([':oid' => $order_id]);
+                    $items = $items_stmt->fetchAll();
+
+                    $deduct_stmt = $pdo->prepare("UPDATE products SET stock = GREATEST(0, stock - :qty) WHERE id = :pid");
+                    foreach ($items as $it) {
+                        if (!empty($it['product_id'])) {
+                            $deduct_stmt->execute([
+                                ':qty' => (int)$it['quantity'],
+                                ':pid' => (int)$it['product_id']
+                            ]);
+                        }
+                    }
+                }
+
+                $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
+                $stmt->execute([':status' => $new_status, ':id' => $order_id]);
+
+                $pdo->commit();
+                $_SESSION['admin_flash_success'] = "Order #GC-" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . " status updated to '{$new_status}'.";
+            } else {
+                $pdo->rollBack();
+                $_SESSION['admin_flash_error'] = 'Order not found.';
+            }
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['admin_flash_error'] = 'Could not update order status: ' . $e->getMessage();
         }
     }
     header('Location: orders.php');
@@ -40,11 +91,26 @@ if (!empty($status_filter)) {
 }
 
 if (!empty($search)) {
-    $where[] = "(customer_name LIKE :search OR email LIKE :search_email OR phone LIKE :search_phone OR id = :search_id)";
-    $params[':search'] = "%{$search}%";
-    $params[':search_email'] = "%{$search}%";
-    $params[':search_phone'] = "%{$search}%";
-    $params[':search_id'] = is_numeric($search) ? (int)$search : 0;
+    $extracted_id = 0;
+    if (preg_match('/(?:GC-?|#GC-?|#)?(\d+)/i', $search, $m)) {
+        $extracted_id = (int)$m[1];
+    }
+
+    if ($extracted_id > 0) {
+        $where[] = "(id = :search_id OR customer_name LIKE :search OR email LIKE :search_email OR phone LIKE :search_phone OR id IN (SELECT order_id FROM order_items WHERE product_name LIKE :item_q))";
+        $params[':search_id'] = $extracted_id;
+        $params[':search'] = "%{$search}%";
+        $params[':search_email'] = "%{$search}%";
+        $params[':search_phone'] = "%{$search}%";
+        $params[':item_q'] = "%{$search}%";
+    } else {
+        $where[] = "(customer_name LIKE :search OR email LIKE :search_email OR phone LIKE :search_phone OR status LIKE :search_st OR id IN (SELECT order_id FROM order_items WHERE product_name LIKE :item_q))";
+        $params[':search'] = "%{$search}%";
+        $params[':search_email'] = "%{$search}%";
+        $params[':search_phone'] = "%{$search}%";
+        $params[':search_st'] = "%{$search}%";
+        $params[':item_q'] = "%{$search}%";
+    }
 }
 
 $sql = "SELECT * FROM orders WHERE " . implode(' AND ', $where) . " ORDER BY id DESC";

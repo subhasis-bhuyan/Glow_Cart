@@ -7,6 +7,8 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/navbar.php';
 
+$user_favorite_ids = is_logged_in() ? get_user_favorite_ids((int)$_SESSION['user_id']) : [];
+
 // Fetch Featured Products
 try {
     $featured_stmt = $pdo->prepare("SELECT * FROM products WHERE is_featured = 1 AND status = 'Active' ORDER BY id DESC LIMIT 4");
@@ -60,8 +62,8 @@ try {
                             <div>Free Fast Delivery</div>
                         </div>
                         <div class="hero-feature-item">
-                            <div class="hero-feature-icon">🎤</div>
-                            <div>Voice Search Enabled</div>
+                            <div class="hero-feature-icon">✨</div>
+                            <div>100% Genuine Products</div>
                         </div>
                     </div>
                 </div>
@@ -138,6 +140,7 @@ try {
 
             <div class="products-grid">
                 <?php foreach ($featured_products as $product): ?>
+                    <?php $is_fav = in_array((int)$product['id'], $user_favorite_ids); ?>
                     <div class="product-card">
                         <div class="product-thumb">
                             <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
@@ -147,8 +150,22 @@ try {
                                     <span class="badge badge-sale"><?= $pct ?>% OFF</span>
                                 <?php endif; ?>
                             </div>
+                            <button type="button" 
+                                    class="card-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                    onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                    title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                    data-product-id="<?= $product['id'] ?>">
+                                <?= $is_fav ? '❤️' : '🤍' ?>
+                            </button>
                             <div class="product-actions-overlay">
                                 <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                <button type="button" 
+                                        class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                        onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                        title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                        data-product-id="<?= $product['id'] ?>">
+                                    <?= $is_fav ? '❤️' : '🤍' ?>
+                                </button>
                                 <?php if ($product['stock'] > 0): ?>
                                     <button type="button" class="action-icon-btn" onclick="addToCart(<?= $product['id'] ?>, 1)" title="Add to Cart">🛍️</button>
                                 <?php endif; ?>
@@ -231,14 +248,29 @@ try {
 
             <div class="products-grid">
                 <?php foreach ($bestseller_products as $product): ?>
+                    <?php $is_fav = in_array((int)$product['id'], $user_favorite_ids); ?>
                     <div class="product-card">
                         <div class="product-thumb">
                             <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
                             <div class="product-badges">
                                 <span class="badge badge-sale">Best Seller</span>
                             </div>
+                            <button type="button" 
+                                    class="card-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                    onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                    title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                    data-product-id="<?= $product['id'] ?>">
+                                <?= $is_fav ? '❤️' : '🤍' ?>
+                            </button>
                             <div class="product-actions-overlay">
                                 <a href="product_details.php?id=<?= $product['id'] ?>" class="action-icon-btn" title="View Details">👁️</a>
+                                <button type="button" 
+                                        class="action-icon-btn action-fav-btn <?= $is_fav ? 'active' : '' ?>" 
+                                        onclick="toggleFavorite(<?= $product['id'] ?>, this)" 
+                                        title="<?= $is_fav ? 'Remove from Favorites' : 'Add to Favorites' ?>"
+                                        data-product-id="<?= $product['id'] ?>">
+                                    <?= $is_fav ? '❤️' : '🤍' ?>
+                                </button>
                                 <?php if ($product['stock'] > 0): ?>
                                     <button type="button" class="action-icon-btn" onclick="addToCart(<?= $product['id'] ?>, 1)" title="Add to Cart">🛍️</button>
                                 <?php endif; ?>
@@ -303,7 +335,7 @@ try {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
                 <div style="background: var(--surface); padding: 30px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                     <div style="color: #fbc02d; margin-bottom: 10px;">★★★★★</div>
-                    <p style="font-style: italic; margin-bottom: 15px;">"The Velvet Matte Rose Lipstick stays vibrant all day long without drying my lips. The voice search on this site made ordering so effortless!"</p>
+                    <p style="font-style: italic; margin-bottom: 15px;">"The Velvet Matte Rose Lipstick stays vibrant all day long without drying my lips. Ordering on this site was so smooth and effortless!"</p>
                     <strong>— Priya Sharma</strong>
                     <div style="font-size: 12px; color: var(--text-muted);">Verified Buyer • Mumbai</div>
                 </div>

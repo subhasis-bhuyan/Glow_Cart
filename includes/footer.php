@@ -2,7 +2,6 @@
 /**
  * GlowCart Cosmetics - Global Footer Component
  */
-require_once __DIR__ . '/voice_assistant.php';
 ?>
     </main>
 
@@ -58,7 +57,7 @@ require_once __DIR__ . '/voice_assistant.php';
             </div>
 
             <div class="footer-bottom">
-                &copy; <?= date('Y') ?> GlowCart Cosmetics. All rights reserved. Built with PHP, MySQL & Web Speech API.
+                &copy; <?= date('Y') ?> GlowCart Cosmetics. All rights reserved. Built with PHP & MySQL.
             </div>
         </div>
     </footer>

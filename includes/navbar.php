@@ -23,17 +23,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="products.php?category=Makeup Kits" class="nav-link <?= (isset($_GET['category']) && $_GET['category'] == 'Makeup Kits') ? 'active' : '' ?>">Kits</a></li>
             </ul>
 
-            <!-- Search Bar with Integrated Voice Search -->
-            <div class="nav-search">
-                <form action="products.php" method="GET" class="search-form">
-                    <input type="text" name="search" class="search-input" placeholder="Search lipstick, foundation, blush..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" autocomplete="off">
-                    <button type="button" id="navMicBtn" class="mic-nav-btn" title="Voice Search (Speak)">
-                        🎤
-                    </button>
-                    <button type="submit" class="search-submit-btn" title="Search">
-                        🔍
+            <!-- Search Bar with Live Instant Results Display -->
+            <div class="nav-search" id="navSearchWrapper">
+                <form action="products.php" method="GET" class="search-form" id="navSearchForm" autocomplete="off">
+                    <span class="search-icon-left" aria-hidden="true">🔍</span>
+                    <input type="text" name="search" id="navSearchInput" class="search-input" placeholder="Search lipstick, foundation, blush, orders..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" autocomplete="off" aria-label="Search products and orders" aria-autocomplete="list" aria-controls="searchDropdownMenu">
+                    <button type="button" class="search-clear-btn" id="navSearchClear" title="Clear search" aria-label="Clear search input" style="display: <?= !empty($_GET['search']) ? 'flex' : 'none' ?>;">✕</button>
+                    <div class="search-spinner" id="navSearchSpinner" aria-hidden="true" style="display: none;"></div>
+                    <button type="submit" class="search-submit-btn" title="Search" aria-label="Submit Search">
+                        <span>Search</span>
                     </button>
                 </form>
+                <!-- Live Instant Search Results Dropdown -->
+                <div class="search-dropdown-menu" id="searchDropdownMenu" role="listbox" aria-label="Live Search Suggestions" style="display: none;"></div>
             </div>
 
             <!-- Nav Actions: Cart & Customer Profile -->
@@ -52,6 +54,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </button>
                         <ul class="user-dropdown-menu">
                             <li><a href="profile.php"><span>👤</span> My Profile</a></li>
+                            <li><a href="profile.php#favorites"><span>❤️</span> My Favorites</a></li>
                             <li><a href="orders.php"><span>📦</span> My Orders</a></li>
                             <li class="dropdown-divider"></li>
                             <li><a href="logout.php" style="color: var(--danger);"><span>🚪</span> Logout</a></li>
