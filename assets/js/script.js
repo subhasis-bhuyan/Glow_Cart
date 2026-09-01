@@ -658,3 +658,18 @@ function highlightSearchMatch(text, query) {
   const regex = new RegExp(`(${cleanQ})`, 'gi');
   return escapedText.replace(regex, '<mark class="search-highlight">$1</mark>');
 }
+
+/**
+ * Quick Price Range Preset Filter
+ */
+function applyPricePreset(min, max) {
+  const minInput = document.getElementById('minPriceInput');
+  const maxInput = document.getElementById('maxPriceInput');
+  const form = document.getElementById('filterForm');
+  if (minInput && maxInput && form) {
+    minInput.value = min > 0 ? min : '';
+    maxInput.value = max > 0 ? max : '';
+    form.submit();
+  }
+}
+

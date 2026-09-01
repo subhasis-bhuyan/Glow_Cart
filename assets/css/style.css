@@ -2316,3 +2316,363 @@ main {
   color: var(--text-muted);
 }
 
+/* ==========================================================================
+   Shop Customized Empty State & Active Filter Enhancements
+   ========================================================================== */
+
+/* Price Range Presets in Sidebar */
+.price-presets-wrap {
+  margin-top: 10px;
+}
+
+.price-presets-title {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.price-preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.price-preset-btn {
+  background: var(--surface-alt);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.price-preset-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.price-preset-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* Active Filter Badges Bar */
+.active-filter-chips-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--primary-soft);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 22px;
+}
+
+.active-chips-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.active-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface);
+  border: 1px solid var(--primary-light);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary-dark);
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(216, 27, 96, 0.08);
+  transition: var(--transition);
+}
+
+.active-filter-chip:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.active-filter-chip:hover .chip-close-icon {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.chip-close-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.active-filter-reset-all {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
+  margin-left: 6px;
+  transition: var(--transition);
+}
+
+.active-filter-reset-all:hover {
+  color: var(--primary-hover);
+}
+
+/* Customized Shop Empty State Card */
+.shop-empty-state {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 55px 30px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 45px;
+}
+
+.empty-state-visual {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(216, 27, 96, 0.15) 0%, rgba(252, 228, 236, 0.05) 70%, transparent 100%);
+  border-radius: 50%;
+  animation: haloPulse 3s infinite ease-in-out;
+}
+
+@keyframes haloPulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+.empty-state-badge {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, #ffffff 100%);
+  border: 2px solid var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(216, 27, 96, 0.12);
+}
+
+.empty-main-icon {
+  font-size: 36px;
+  animation: gentleBounce 2.5s infinite ease-in-out;
+}
+
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(4deg); }
+}
+
+.empty-sparkle {
+  position: absolute;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.sparkle-1 {
+  top: -6px;
+  right: -4px;
+  animation: sparkleTwinkle 2s infinite ease-in-out;
+}
+
+.sparkle-2 {
+  bottom: 2px;
+  left: -8px;
+  animation: sparkleTwinkle 2.3s infinite ease-in-out 0.6s;
+}
+
+.sparkle-3 {
+  top: 10px;
+  left: -6px;
+  animation: sparkleTwinkle 1.8s infinite ease-in-out 1.2s;
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.6; }
+  50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
+}
+
+.empty-state-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+
+.empty-state-desc {
+  max-width: 580px;
+  margin: 0 auto 24px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.empty-state-desc strong {
+  color: var(--text-main);
+}
+
+/* Empty State Filter Chips Inner */
+.empty-active-chips-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.empty-chips-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Actions Row */
+.empty-actions-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.empty-action-btn {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  border-radius: var(--radius-full);
+}
+
+/* Quick Category Shortcuts */
+.empty-quick-categories {
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.empty-quick-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.empty-cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.empty-cat-chip {
+  background: var(--surface-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.empty-cat-chip:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Empty Fallback Bestsellers Showcase */
+.empty-fallback-showcase {
+  margin-top: 50px;
+  padding-top: 40px;
+  border-top: 2px dashed var(--border-color);
+}
+
+.empty-fallback-header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 35px;
+}
+
+.empty-fallback-pill {
+  display: inline-block;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 10px;
+}
+
+.empty-fallback-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.empty-fallback-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+
