@@ -61,6 +61,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <li><a href="profile.php"><span>👤</span> My Profile</a></li>
                             <li><a href="profile.php#favorites"><span>❤️</span> My Favorites</a></li>
                             <li><a href="orders.php"><span>📦</span> My Orders</a></li>
+                            <?php if (is_admin_logged_in()): ?>
+                                <li><a href="admin/index.php" style="color: var(--primary); font-weight: 600;"><span>🛡️</span> Admin Panel</a></li>
+                            <?php endif; ?>
                             <li class="dropdown-divider"></li>
                             <li><a href="logout.php" style="color: var(--danger);"><span>🚪</span> Logout</a></li>
                         </ul>
@@ -132,6 +135,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="profile.php"><span>👤</span> My Profile & Address</a></li>
                 <li><a href="profile.php#favorites"><span>❤️</span> My Liked / Favorites</a></li>
                 <li><a href="orders.php"><span>📦</span> My Orders & Receipts</a></li>
+                <?php if (is_admin_logged_in()): ?>
+                    <li><a href="admin/index.php" style="color: var(--primary); font-weight: 600;"><span>🛡️</span> Admin Panel</a></li>
+                <?php endif; ?>
                 <li><a href="logout.php" style="color: var(--danger);"><span>🚪</span> Log Out</a></li>
             <?php else: ?>
                 <li><a href="login.php"><span>🔑</span> Customer Login</a></li>

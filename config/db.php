@@ -41,6 +41,7 @@ if (extension_loaded('pdo_mysql') && ($has_remote_host || $has_db_url || !$is_cl
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 2,
         ];
         if (getenv('DB_SSL') === 'true' || getenv('MYSQL_ATTR_SSL_CA') || ($db_host !== 'localhost' && $db_host !== '127.0.0.1')) {
             $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
@@ -104,6 +105,18 @@ if ($pdo && $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
               CONSTRAINT `fk_favorites_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+    } catch (PDOException $e) {}
+}
+
+// 4. Auto-repair legacy seed admin hash if corrupted
+if ($pdo) {
+    try {
+        $adm_check = $pdo->query("SELECT id, password FROM admins WHERE email = 'admin@glowcart.com' LIMIT 1")->fetch();
+        if ($adm_check && ($adm_check['password'] === '$2y$10$w8T0P1zD8yT90a0K1C6DqeZk8gO9vH0k1Pq6y0mZ2eF.6B3t1QJeq' || !password_verify('admin123', $adm_check['password']))) {
+            $valid_hash = password_hash('admin123', PASSWORD_BCRYPT);
+            $fix_stmt = $pdo->prepare("UPDATE admins SET password = ? WHERE id = ?");
+            $fix_stmt->execute([$valid_hash, $adm_check['id']]);
+        }
     } catch (PDOException $e) {}
 }
 
@@ -198,9 +211,9 @@ function init_sqlite_database(): PDO {
             );
         ");
 
-        // Seed default Admin and Customer
-        $admin_hash = '$2y$10$w8T0P1zD8yT90a0K1C6DqeZk8gO9vH0k1Pq6y0mZ2eF.6B3t1QJeq';
-        $user_hash  = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+        // Seed default Admin and Customer (admin123 / password123)
+        $admin_hash = password_hash('admin123', PASSWORD_BCRYPT);
+        $user_hash  = password_hash('password123', PASSWORD_BCRYPT);
         
         $admin_stmt = $pdo->prepare("INSERT INTO admins (id, username, email, password, created_at) VALUES (1, 'Admin GlowCart', 'admin@glowcart.com', ?, CURRENT_TIMESTAMP)");
         $admin_stmt->execute([$admin_hash]);

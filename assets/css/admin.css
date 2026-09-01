@@ -311,17 +311,300 @@ a {
   font-size: 11px;
   font-weight: 600;
   border-radius: 4px;
+  text-transform: capitalize;
 }
 .admin-badge-active { background: #e8f5e9; color: #2e7d32; }
 .admin-badge-inactive { background: #ffebee; color: #c62828; }
+.admin-badge-pending { background: #fff8e1; color: #b78103; }
+.admin-badge-confirmed { background: #e1f5fe; color: #0277bd; }
+.admin-badge-shipped { background: #ede7f6; color: #512da8; }
+.admin-badge-delivered { background: #e8f5e9; color: #2e7d32; }
+.admin-badge-cancelled { background: #ffebee; color: #c62828; }
+.admin-badge-info { background: #e0f2f1; color: #00695c; }
+.admin-badge-warning { background: #fff3e0; color: #e65100; }
+
+/* Alert Messages */
+.admin-alert {
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+}
+.admin-alert-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+.admin-alert-danger {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+.admin-alert-warning {
+  background: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffecb3;
+}
+.admin-alert-info {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
 
 /* Auth Layout */
 .admin-auth-box {
-  max-width: 400px;
-  margin: 100px auto;
+  max-width: 440px;
+  margin: 70px auto;
   background: var(--admin-surface);
   border: 1px solid var(--admin-border);
   border-radius: var(--radius);
   padding: 35px;
   box-shadow: var(--shadow-md);
+}
+
+.admin-auth-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.admin-auth-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--admin-text);
+  margin-top: 6px;
+}
+
+.admin-auth-header p {
+  color: var(--admin-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Toolbar & Filters */
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.admin-toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-search-wrapper {
+  position: relative;
+  min-width: 260px;
+}
+
+.admin-search-wrapper input {
+  width: 100%;
+  padding: 9px 14px 9px 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: #ffffff;
+}
+
+.admin-search-wrapper input:focus {
+  border-color: var(--admin-primary);
+}
+
+.admin-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--admin-muted);
+  pointer-events: none;
+}
+
+.admin-select {
+  padding: 9px 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-select:focus {
+  border-color: var(--admin-primary);
+}
+
+/* Image Upload / Preview */
+.admin-image-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  border: 2px dashed var(--admin-border);
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.admin-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Stock status indicators */
+.stock-healthy { color: #2e7d32; font-weight: 600; }
+.stock-low { color: #e65100; font-weight: 600; }
+.stock-out { color: #c62828; font-weight: 700; }
+
+/* Empty state */
+.admin-empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--admin-muted);
+}
+.admin-empty-state .icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+/* Order Details Grid */
+.order-details-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+}
+
+@media (max-width: 900px) {
+  .order-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-summary-card {
+  background: var(--admin-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--admin-border);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+.admin-summary-title {
+  font-size: 15px;
+  font-weight: 600;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.info-list {
+  list-style: none;
+  font-size: 13px;
+}
+
+.info-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #f0f2f5;
+}
+
+.info-list li:last-child {
+  border-bottom: none;
+}
+
+.info-list .label {
+  color: var(--admin-muted);
+}
+
+.info-list .value {
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Mobile Responsiveness */
+.admin-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--admin-text);
+  padding: 4px;
+}
+
+@media (max-width: 992px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    bottom: 0;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  .admin-sidebar.open {
+    left: 0;
+  }
+  .admin-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  .admin-sidebar-overlay.active {
+    display: block;
+  }
+  .admin-mobile-toggle {
+    display: block;
+  }
+  .admin-topbar {
+    padding: 0 15px;
+  }
+  .admin-content {
+    padding: 15px;
+  }
+  .admin-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print Stylesheet for Receipt / Invoice */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .admin-sidebar,
+  .admin-topbar,
+  .admin-btn,
+  .no-print {
+    display: none !important;
+  }
+  .admin-main, .admin-content {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .admin-summary-card, .card-table {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
 }

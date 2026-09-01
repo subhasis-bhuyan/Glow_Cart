@@ -125,7 +125,7 @@ CREATE TABLE `favorites` (
 -- Default Admin User (Password: admin123)
 -- Hash generated via password_hash('admin123', PASSWORD_BCRYPT)
 INSERT INTO `admins` (`id`, `username`, `email`, `password`, `created_at`) VALUES
-(1, 'Admin GlowCart', 'admin@glowcart.com', '$2y$10$w8T0P1zD8yT90a0K1C6DqeZk8gO9vH0k1Pq6y0mZ2eF.6B3t1QJeq', NOW());
+(1, 'Admin GlowCart', 'admin@glowcart.com', '$2y$10$DqPEtjuICzWqtJu7qG2zgOdoPdvqwbL.pzKWMxGiOepXp/yxZdaC2', NOW());
 
 -- Default Demo Customer (Password: password123)
 -- Hash generated via password_hash('password123', PASSWORD_BCRYPT)
