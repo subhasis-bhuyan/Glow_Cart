@@ -64,7 +64,7 @@ if ($action === 'toggle') {
             exit;
         } else {
             // Add favorite
-            $ins_stmt = $pdo->prepare("INSERT INTO favorites (user_id, product_id, created_at) VALUES (:uid, :pid, NOW())");
+            $ins_stmt = $pdo->prepare("INSERT INTO favorites (user_id, product_id, created_at) VALUES (:uid, :pid, CURRENT_TIMESTAMP)");
             $ins_stmt->execute([':uid' => $user_id, ':pid' => $product_id]);
 
             echo json_encode([

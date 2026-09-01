@@ -17,7 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $pdo->beginTransaction();
 
             // Fetch order and verify ownership + cancellable status
-            $chk_stmt = $pdo->prepare("SELECT id, status, total_amount, payment_method, payment_status FROM orders WHERE id = :id AND user_id = :uid FOR UPDATE");
+            $is_sqlite = ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
+            $lock_clause = $is_sqlite ? '' : ' FOR UPDATE';
+            $chk_stmt = $pdo->prepare("SELECT id, status, total_amount, payment_method, payment_status FROM orders WHERE id = :id AND user_id = :uid{$lock_clause}");
             $chk_stmt->execute([':id' => $cancel_order_id, ':uid' => $user_id]);
             $ord = $chk_stmt->fetch();
 

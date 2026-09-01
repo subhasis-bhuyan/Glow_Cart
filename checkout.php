@@ -94,9 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Begin Atomic MySQL Transaction
             $pdo->beginTransaction();
 
+            $is_sqlite = ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
+            $lock_clause = $is_sqlite ? '' : ' FOR UPDATE';
+
             // Double check and lock product rows for stock safety
             foreach ($checkout_items as $item) {
-                $chk = $pdo->prepare("SELECT stock FROM products WHERE id = :id FOR UPDATE");
+                $chk = $pdo->prepare("SELECT stock FROM products WHERE id = :id{$lock_clause}");
                 $chk->execute([':id' => $item['id']]);
                 $avail = (int)$chk->fetchColumn();
 
@@ -108,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 1. Insert into orders table
             $order_stmt = $pdo->prepare("
                 INSERT INTO orders (user_id, customer_name, email, phone, address, city, state, pincode, total_amount, payment_method, payment_status, status, created_at)
-                VALUES (:user_id, :name, :email, :phone, :address, :city, :state, :pincode, :total, :method, :pay_status, 'Pending', NOW())
+                VALUES (:user_id, :name, :email, :phone, :address, :city, :state, :pincode, :total, :method, :pay_status, 'Pending', CURRENT_TIMESTAMP)
             ");
             $order_stmt->execute([
                 ':user_id'    => $user_id,
