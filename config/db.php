@@ -8,11 +8,26 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$db_host = 'localhost';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'glowcart_db';
-$db_port = 3306;
+// Database configuration - supports environment variables for cloud deployment (Render, Railway, etc.)
+// and defaults to local XAMPP settings
+$db_url = getenv('DATABASE_URL') ?: getenv('MYSQL_URL');
+
+if ($db_url) {
+    $url_parts = parse_url($db_url);
+    $db_host = $url_parts['host'] ?? 'localhost';
+    $db_port = (int)($url_parts['port'] ?? 3306);
+    $db_user = $url_parts['user'] ?? 'root';
+    $db_pass = $url_parts['pass'] ?? '';
+    $db_name = ltrim($url_parts['path'] ?? 'glowcart_db', '/');
+} else {
+    $db_host = getenv('DB_HOST') ?: 'localhost';
+    $db_port = (int)(getenv('DB_PORT') ?: 3306);
+    $db_user = getenv('DB_USER') ?: 'root';
+    $db_pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '');
+    $db_name = getenv('DB_NAME') ?: 'glowcart_db';
+}
+
+$is_cloud_env = !empty(getenv('RENDER')) || !empty(getenv('PORT')) || ($db_host !== 'localhost' && $db_host !== '127.0.0.1');
 
 try {
     $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
@@ -21,16 +36,22 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
     ];
+    
+    // Enable SSL if running against remote cloud databases (e.g. TiDB, Aiven, PlanetScale)
+    if (getenv('DB_SSL') === 'true' || getenv('MYSQL_ATTR_SSL_CA') || ($db_host !== 'localhost' && $db_host !== '127.0.0.1')) {
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    }
+
     $pdo = new PDO($dsn, $db_user, $db_pass, $options);
 } catch (PDOException $e) {
-    // If database doesn't exist yet, attempt automatic creation
+    // If database doesn't exist yet, attempt automatic creation (works if user has CREATE DB privileges)
     try {
-        $temp_pdo = new PDO("mysql:host={$db_host};port={$db_port};charset=utf8mb4", $db_user, $db_pass);
+        $temp_pdo = new PDO("mysql:host={$db_host};port={$db_port};charset=utf8mb4", $db_user, $db_pass, $options ?? []);
         $temp_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $temp_pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         
         // Connect to newly created database
-        $pdo = new PDO("mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4", $db_user, $db_pass, $options);
+        $pdo = new PDO("mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4", $db_user, $db_pass, $options ?? []);
         
         // Auto import schema if tables do not exist
         $check = $pdo->query("SHOW TABLES LIKE 'products'")->rowCount();
@@ -42,10 +63,27 @@ try {
             }
         }
     } catch (PDOException $ex) {
-        die("<div style='font-family:sans-serif;padding:30px;background:#ffebee;color:#c62828;border-radius:8px;margin:50px auto;max-width:600px;'>
-            <h2>Database Connection Error</h2>
-            <p>Could not connect to MySQL server on <code>localhost</code>. Please ensure Apache and MySQL are running in your XAMPP Control Panel.</p>
-            <p><strong>Error Details:</strong> " . htmlspecialchars($ex->getMessage()) . "</p>
+        $error_msg = htmlspecialchars($ex->getMessage());
+        $is_render = !empty(getenv('RENDER')) || !empty(getenv('PORT'));
+        
+        $guide_html = $is_render
+            ? "<p><strong>Why is this happening on Render?</strong> Render web services run in isolated containers where MySQL is <strong>not</strong> installed locally. You need to connect to a cloud MySQL database (e.g., free on <em>TiDB Serverless</em>, <em>Aiven</em>, or <em>Clever Cloud</em>).</p>
+               <p><strong>Fix:</strong> In your Render Dashboard, go to <strong>Environment</strong> and add:</p>
+               <ul>
+                 <li><code>DB_HOST</code> (e.g. your cloud database host)</li>
+                 <li><code>DB_PORT</code> (e.g. <code>3306</code> or <code>4000</code>)</li>
+                 <li><code>DB_USER</code> (your cloud database user)</li>
+                 <li><code>DB_PASS</code> (your cloud database password)</li>
+                 <li><code>DB_NAME</code> (e.g. <code>glowcart_db</code>)</li>
+               </ul>"
+            : "<p>Could not connect to MySQL server on <code>{$db_host}</code>. Please ensure Apache and MySQL are running in your XAMPP Control Panel.</p>";
+
+        die("<div style='font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding:30px;background:#ffebee;color:#c62828;border-radius:10px;margin:50px auto;max-width:680px;box-shadow:0 4px 20px rgba(0,0,0,0.1);line-height:1.6;'>
+            <h2 style='margin-top:0;display:flex;align-items:center;gap:10px;'>⚠️ Database Connection Error</h2>
+            {$guide_html}
+            <div style='background:rgba(0,0,0,0.05);padding:12px;border-radius:6px;font-size:13px;word-break:break-all;'>
+                <strong>Error Details:</strong> {$error_msg}
+            </div>
         </div>");
     }
 }
